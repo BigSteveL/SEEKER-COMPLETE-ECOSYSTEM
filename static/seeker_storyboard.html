@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEEKER AI - Interactive Storyboard & GUI Narrative</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #b0b0b0;
+            margin-bottom: 20px;
+        }
+
+        .storyboard-section {
+            margin-bottom: 60px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .storyboard-section:nth-child(2) { animation-delay: 0.2s; }
+        .storyboard-section:nth-child(3) { animation-delay: 0.4s; }
+        .storyboard-section:nth-child(4) { animation-delay: 0.6s; }
+        .storyboard-section:nth-child(5) { animation-delay: 0.8s; }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #00d4ff;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, #00d4ff, #ff6b6b);
+            border-radius: 2px;
+        }
+
+        /* Main Interface Mockup */
+        .interface-mockup {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .interface-mockup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00d4ff, #ff6b6b, #4ecdc4);
+        }
+
+        .interface-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 20px;
+            height: 600px;
+        }
+
+        .sidebar {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .main-content {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .voice-interface {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-item {
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.3);
+            transform: translateX(5px);
+        }
+
+        .menu-item.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .voice-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        .voice-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .voice-button.recording {
+            animation: recording 1s infinite;
+        }
+
+        /* User Journey */
+        .journey-timeline {
+            position: relative;
+            padding: 40px 0;
+        }
+
+        .journey-timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #00d4ff, #ff6b6b, #4ecdc4);
+            transform: translateX(-50%);
+        }
+
+        .journey-step {
+            display: flex;
+            align-items: center;
+            margin: 40px 0;
+            opacity: 0;
+            transform: translateX(-50px);
+            animation: slideInLeft 0.8s ease-out forwards;
+        }
+
+        .journey-step:nth-child(even) {
+            flex-direction: row-reverse;
+            transform: translateX(50px);
+            animation: slideInRight 0.8s ease-out forwards;
+        }
+
+        .journey-step:nth-child(2) { animation-delay: 0.2s; }
+        .journey-step:nth-child(3) { animation-delay: 0.4s; }
+        .journey-step:nth-child(4) { animation-delay: 0.6s; }
+        .journey-step:nth-child(5) { animation-delay: 0.8s; }
+
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-content {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            flex: 1;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+
+        .step-description {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        /* AI Orchestration Visualization */
+        .orchestration-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .agent-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00d4ff, #ff6b6b);
+        }
+
+        .agent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .agent-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .agent-title {
+            font-size: 1.2rem;
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+
+        .agent-description {
+            color: #b0b0b0;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .agent-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .status-processing {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        /* 3D Product Visualization */
+        .product-visualization {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-canvas {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 15px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .product-model {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            border-radius: 50%;
+            position: relative;
+            animation: rotate 10s linear infinite;
+            box-shadow: 0 0 50px rgba(0, 212, 255, 0.5);
+        }
+
+        .product-model::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 20%;
+            width: 60%;
+            height: 60%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .product-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .control-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Voice Interaction Flow */
+        .voice-flow {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .flow-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            color: #00d4ff;
+            animation: flowArrow 2s infinite;
+        }
+
+        .flow-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 15px;
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover .flow-icon {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .flow-title {
+            font-size: 1.1rem;
+            color: #00d4ff;
+            margin-bottom: 8px;
+        }
+
+        .flow-description {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes recording {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 107, 107, 0.8); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        @keyframes flowArrow {
+            0%, 100% { opacity: 0.5; transform: translateY(-50%) translateX(0); }
+            50% { opacity: 1; transform: translateY(-50%) translateX(5px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .interface-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .journey-step {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .journey-step:nth-child(even) {
+                flex-direction: column;
+            }
+
+            .journey-timeline::before {
+                left: 40px;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .flow-step:not(:last-child)::after {
+                content: '↓';
+                right: 50%;
+                top: auto;
+                bottom: -25px;
+                transform: translateX(50%);
+            }
+        }
+
+        /* Interactive Elements */
+        .interactive-demo {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .demo-button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .demo-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .demo-output {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 SEEKER AI</h1>
+            <p>Interactive Storyboard & GUI Narrative</p>
+            <p>AI-Powered Product Prototyping & Global Manufacturing Platform</p>
+        </div>
+
+        <!-- 1. Main Interface Mockup -->
+        <div class="storyboard-section">
+            <h2 class="section-title">Main Interface Mockup</h2>
+            <div class="interface-mockup">
+                <div class="interface-grid">
+                    <!-- Left Sidebar -->
+                    <div class="sidebar">
+                        <h3 style="color: #00d4ff; margin-bottom: 20px;">🎯 Navigation</h3>
+                        <div class="menu-item active">🏠 Dashboard</div>
+                        <div class="menu-item">🔍 Product Search</div>
+                        <div class="menu-item">⚙️ Manufacturing</div>
+                        <div class="menu-item">📊 Analytics</div>
+                        <div class="menu-item">🌐 Global Shipping</div>
+                        <div class="menu-item">🖨️ 3D Printing</div>
+                        <div class="menu-item">🎥 Video Conference</div>
+                        <div class="menu-item">🔮 Holographic</div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="main-content">
+                        <h3 style="color: #00d4ff; margin-bottom: 20px;">🎨 Product Design Studio</h3>
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                            <h4 style="color: #ff6b6b; margin-bottom: 10px;">AI Assistant</h4>
+                            <p style="color: #b0b0b0;">"I can help you design and prototype your product. What would you like to create today?"</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px;">
+                                <h4 style="color: #4ecdc4;">📐 Design Tools</h4>
+                                <p style="color: #b0b0b0; font-size: 0.9rem;">3D Modeling, CAD, Prototyping</p>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px;">
+                                <h4 style="color: #4ecdc4;">🏭 Manufacturing</h4>
+                                <p style="color: #b0b0b0; font-size: 0.9rem;">Global Suppliers, Quality Control</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Voice Interface -->
+                    <div class="voice-interface">
+                        <h3 style="color: #00d4ff; margin-bottom: 20px;">🎤 Voice Control</h3>
+                        <button class="voice-button" onclick="toggleVoice()">
+                            🎤
+                        </button>
+                        <div style="text-align: center; color: #b0b0b0; font-size: 0.9rem;">
+                            Click to activate voice commands
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px;">
+                            <h4 style="color: #ff6b6b; margin-bottom: 10px;">Voice Commands</h4>
+                            <ul style="color: #b0b0b0; font-size: 0.9rem; list-style: none;">
+                                <li>• "Design a smartphone case"</li>
+                                <li>• "Find suppliers in China"</li>
+                                <li>• "Show 3D preview"</li>
+                                <li>• "Start video conference"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. User Journey -->
+        <div class="storyboard-section">
+            <h2 class="section-title">User Journey: Device Startup to Product Creation</h2>
+            <div class="journey-timeline">
+                <div class="journey-step">
+                    <div class="step-icon">🚀</div>
+                    <div class="step-content">
+                        <div class="step-title">Device Startup</div>
+                        <div class="step-description">
+                            User powers on SEEKER device. AI system initializes with holographic boot sequence. 
+                            Voice interface activates with personalized greeting.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="journey-step">
+                    <div class="step-icon">🎯</div>
+                    <div class="step-content">
+                        <div class="step-title">Project Initiation</div>
+                        <div class="step-description">
+                            User describes product idea via voice or text. AI classifies request and determines 
+                            optimal workflow path through the orchestration system.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="journey-step">
+                    <div class="step-icon">🎨</div>
+                    <div class="step-content">
+                        <div class="step-title">Design Phase</div>
+                        <div class="step-description">
+                            AI generates initial 3D models and design concepts. User can modify designs through 
+                            voice commands, gesture control, or traditional interface.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="journey-step">
+                    <div class="step-icon">🏭</div>
+                    <div class="step-content">
+                        <div class="step-title">Manufacturing Setup</div>
+                        <div class="step-description">
+                            System identifies optimal manufacturing partners globally. Real-time quotes, 
+                            quality metrics, and production timelines are presented.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="journey-step">
+                    <div class="step-icon">✅</div>
+                    <div class="step-content">
+                        <div class="step-title">Production Launch</div>
+                        <div class="step-description">
+                            Orders are placed automatically. AI monitors production progress, quality control, 
+                            and shipping logistics in real-time.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. AI Agent Orchestration -->
+        <div class="storyboard-section">
+            <h2 class="section-title">AI Agent Orchestration Visualization</h2>
+            <div class="orchestration-grid">
+                <div class="agent-card">
+                    <div class="agent-icon">🧠</div>
+                    <div class="agent-title">Classification Engine</div>
+                    <div class="agent-description">
+                        Analyzes user input and categorizes requests into specific domains (manufacturing, 
+                        design, shipping, etc.)
+                    </div>
+                    <div class="agent-status status-active">Active</div>
+                </div>
+
+                <div class="agent-card">
+                    <div class="agent-icon">🎯</div>
+                    <div class="agent-title">Agent Router</div>
+                    <div class="agent-description">
+                        Determines optimal AI agents for task execution based on classification results 
+                        and current system load.
+                    </div>
+                    <div class="agent-status status-processing">Processing</div>
+                </div>
+
+                <div class="agent-card">
+                    <div class="agent-icon">🎨</div>
+                    <div class="agent-title">Design Agent</div>
+                    <div class="agent-description">
+                        Specialized in 3D modeling, CAD design, and product visualization. Generates 
+                        initial concepts and iterates based on feedback.
+                    </div>
+                    <div class="agent-status status-active">Active</div>
+                </div>
+
+                <div class="agent-card">
+                    <div class="agent-icon">🏭</div>
+                    <div class="agent-title">Manufacturing Agent</div>
+                    <div class="agent-description">
+                        Manages supplier relationships, cost analysis, and production planning. 
+                        Optimizes for quality, cost, and delivery time.
+                    </div>
+                    <div class="agent-status status-active">Active</div>
+                </div>
+
+                <div class="agent-card">
+                    <div class="agent-icon">📊</div>
+                    <div class="agent-title">Analytics Agent</div>
+                    <div class="agent-description">
+                        Provides market insights, trend analysis, and performance metrics. 
+                        Helps optimize product design and manufacturing decisions.
+                    </div>
+                    <div class="agent-status status-active">Active</div>
+                </div>
+
+                <div class="agent-card">
+                    <div class="agent-icon">🔄</div>
+                    <div class="agent-title">SAIR Loop</div>
+                    <div class="agent-description">
+                        Continuous learning system that improves performance based on user feedback, 
+                        market data, and operational metrics.
+                    </div>
+                    <div class="agent-status status-processing">Learning</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 3D Product Visualization -->
+        <div class="storyboard-section">
+            <h2 class="section-title">3D Product Visualization Mockup</h2>
+            <div class="product-visualization">
+                <div class="product-canvas">
+                    <div class="product-model" id="productModel"></div>
+                </div>
+                <div class="product-controls">
+                    <button class="control-button" onclick="rotateModel('left')">↶ Rotate Left</button>
+                    <button class="control-button" onclick="rotateModel('right')">↷ Rotate Right</button>
+                    <button class="control-button" onclick="zoomModel('in')">🔍 Zoom In</button>
+                    <button class="control-button" onclick="zoomModel('out')">🔍 Zoom Out</button>
+                    <button class="control-button" onclick="changeMaterial()">🎨 Change Material</button>
+                </div>
+                <div style="margin-top: 20px; text-align: center; color: #b0b0b0;">
+                    <h4 style="color: #00d4ff; margin-bottom: 10px;">Product Specifications</h4>
+                    <p>Material: Carbon Fiber Composite</p>
+                    <p>Dimensions: 150mm x 75mm x 8mm</p>
+                    <p>Weight: 45g</p>
+                    <p>Manufacturing Cost: $12.50</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Voice Interaction Flow -->
+        <div class="storyboard-section">
+            <h2 class="section-title">Voice Interaction Flow Diagram</h2>
+            <div class="voice-flow">
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <div class="flow-icon">🎤</div>
+                        <div class="flow-title">Voice Input</div>
+                        <div class="flow-description">User speaks command or request</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon">🧠</div>
+                        <div class="flow-title">NLP Processing</div>
+                        <div class="flow-description">AI converts speech to text and understands intent</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon">🎯</div>
+                        <div class="flow-title">Classification</div>
+                        <div class="flow-description">Request categorized and routed to appropriate agents</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon">⚙️</div>
+                        <div class="flow-title">Agent Execution</div>
+                        <div class="flow-description">Specialized AI agents process the request</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon">🔊</div>
+                        <div class="flow-title">Response Synthesis</div>
+                        <div class="flow-description">AI generates voice response and visual feedback</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Demo -->
+        <div class="storyboard-section">
+            <h2 class="section-title">Interactive Demo</h2>
+            <div class="interactive-demo">
+                <button class="demo-button" onclick="demoVoiceCommand()">🎤 Test Voice Command</button>
+                <button class="demo-button" onclick="demoProductDesign()">🎨 Demo Product Design</button>
+                <button class="demo-button" onclick="demoManufacturing()">🏭 Demo Manufacturing</button>
+                <button class="demo-button" onclick="demoAnalytics()">📊 Demo Analytics</button>
+                
+                <div class="demo-output" id="demoOutput">
+                    Click a button above to see the SEEKER AI system in action...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Voice Interface
+        let isRecording = false;
+        
+        function toggleVoice() {
+            const button = document.querySelector('.voice-button');
+            isRecording = !isRecording;
+            
+            if (isRecording) {
+                button.classList.add('recording');
+                button.innerHTML = '🔴';
+                setTimeout(() => {
+                    button.classList.remove('recording');
+                    button.innerHTML = '🎤';
+                    isRecording = false;
+                    demoVoiceCommand();
+                }, 3000);
+            } else {
+                button.classList.remove('recording');
+                button.innerHTML = '🎤';
+            }
+        }
+
+        // 3D Model Controls
+        let rotationAngle = 0;
+        let scale = 1;
+        let materialIndex = 0;
+        const materials = [
+            'linear-gradient(45deg, #00d4ff, #ff6b6b)',
+            'linear-gradient(45deg, #4ecdc4, #44a08d)',
+            'linear-gradient(45deg, #ff6b6b, #ee5a24)',
+            'linear-gradient(45deg, #a8e6cf, #dcedc1)'
+        ];
+
+        function rotateModel(direction) {
+            const model = document.getElementById('productModel');
+            rotationAngle += direction === 'left' ? -45 : 45;
+            model.style.transform = `rotateY(${rotationAngle}deg) scale(${scale})`;
+        }
+
+        function zoomModel(direction) {
+            const model = document.getElementById('productModel');
+            scale += direction === 'in' ? 0.1 : -0.1;
+            scale = Math.max(0.5, Math.min(2, scale));
+            model.style.transform = `rotateY(${rotationAngle}deg) scale(${scale})`;
+        }
+
+        function changeMaterial() {
+            const model = document.getElementById('productModel');
+            materialIndex = (materialIndex + 1) % materials.length;
+            model.style.background = materials[materialIndex];
+        }
+
+        // Demo Functions
+        function demoVoiceCommand() {
+            const output = document.getElementById('demoOutput');
+            output.innerHTML = `
+                <h4 style="color: #00d4ff;">🎤 Voice Command Demo</h4>
+                <p><strong>User:</strong> "Design a smartphone case for iPhone 15"</p>
+                <p><strong>AI:</strong> "I'll help you design a smartphone case. Let me analyze your requirements and generate some design options..."</p>
+                <p><strong>Status:</strong> <span style="color: #00ff00;">✓ Processing</span></p>
+                <p><strong>Agents Activated:</strong> Classification Engine, Design Agent, Manufacturing Agent</p>
+            `;
+        }
+
+        function demoProductDesign() {
+            const output = document.getElementById('demoOutput');
+            output.innerHTML = `
+                <h4 style="color: #00d4ff;">🎨 Product Design Demo</h4>
+                <p><strong>Design Phase:</strong> AI generating 3D models...</p>
+                <p><strong>Materials:</strong> Carbon Fiber, TPU, Polycarbonate</p>
+                <p><strong>Features:</strong> Wireless charging compatible, MagSafe support, Drop protection</p>
+                <p><strong>Status:</strong> <span style="color: #00ff00;">✓ Design Complete</span></p>
+                <p><strong>Next:</strong> Manufacturing analysis and supplier selection</p>
+            `;
+        }
+
+        function demoManufacturing() {
+            const output = document.getElementById('demoOutput');
+            output.innerHTML = `
+                <h4 style="color: #00d4ff;">🏭 Manufacturing Demo</h4>
+                <p><strong>Supplier Analysis:</strong> 15 qualified manufacturers found</p>
+                <p><strong>Top 3 Options:</strong></p>
+                <ul>
+                    <li>🇨🇳 Shenzhen Tech (Lead time: 15 days, Cost: $8.50/unit)</li>
+                    <li>🇺🇸 California Mfg (Lead time: 8 days, Cost: $12.50/unit)</li>
+                    <li>🇩🇪 German Precision (Lead time: 12 days, Cost: $10.20/unit)</li>
+                </ul>
+                <p><strong>Recommendation:</strong> Shenzhen Tech for cost optimization</p>
+            `;
+        }
+
+        function demoAnalytics() {
+            const output = document.getElementById('demoOutput');
+            output.innerHTML = `
+                <h4 style="color: #00d4ff;">📊 Analytics Demo</h4>
+                <p><strong>Market Analysis:</strong> Smartphone case market growing 12% annually</p>
+                <p><strong>Competition:</strong> 47% market share held by top 5 brands</p>
+                <p><strong>Opportunity:</strong> Premium segment showing 18% growth</p>
+                <p><strong>Pricing Strategy:</strong> Recommended MSRP: $29.99</p>
+                <p><strong>ROI Projection:</strong> 340% return on investment</p>
+            `;
+        }
+
+        // Auto-animate agents
+        setInterval(() => {
+            const processingAgents = document.querySelectorAll('.status-processing');
+            processingAgents.forEach(agent => {
+                agent.classList.remove('status-processing');
+                agent.classList.add('status-active');
+                agent.textContent = 'Active';
+            });
+        }, 5000);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Trigger animations on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            document.querySelectorAll('.storyboard-section').forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEEKER 3D-Holographic Integration Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="test-panel">
+            <h2><i class="fas fa-cube me-2"></i>SEEKER 3D-Holographic Integration Test</h2>
+            <p>Testing the connection between 3D Visualization and Holographic Projection systems</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-server me-2"></i>Backend API Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="api-status">
+                            <div class="mb-2">
+                                <span class="status-indicator status-warning"></span>
+                                <span>Health Check: <span id="health-status">Testing...</span></span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="status-indicator status-warning"></span>
+                                <span>Holographic API: <span id="holo-api-status">Testing...</span></span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="status-indicator status-warning"></span>
+                                <span>3D Files API: <span id="3d-api-status">Testing...</span></span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="testAPIs()">
+                            <i class="fas fa-sync me-2"></i>Test APIs
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cube me-2"></i>3D Visualization Test</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="3d-test-container" style="height: 300px; background: #1a1a2e; border-radius: 5px;">
+                            <div class="text-center text-white pt-5">
+                                <i class="fas fa-cube fa-3x mb-3"></i>
+                                <p>3D Visualization Container</p>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success" onclick="test3DVisualization()">
+                                <i class="fas fa-play me-2"></i>Test 3D Visualization
+                            </button>
+                            <button class="btn btn-info" onclick="testHolographicProjection()">
+                                <i class="fas fa-cube me-2"></i>Test Holographic Projection
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list me-2"></i>Integration Test Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="test-results">
+                            <p class="text-muted">Click "Test APIs" to begin integration testing...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/holographic-projection.js"></script>
+    <script src="js/3d-visualization.js"></script>
+
+    <script>
+        let testResults = [];
+
+        async function testAPIs() {
+            testResults = [];
+            addResult('Starting API integration tests...', 'info');
+
+            // Test health endpoint
+            try {
+                const healthResponse = await fetch('/health');
+                const healthData = await healthResponse.json();
+                document.getElementById('health-status').textContent = healthData.status;
+                document.getElementById('health-status').parentElement.querySelector('.status-indicator').className = 
+                    'status-indicator ' + (healthData.status === 'healthy' ? 'status-success' : 'status-warning');
+                addResult(`Health Check: ${healthData.status}`, healthData.status === 'healthy' ? 'success' : 'warning');
+            } catch (error) {
+                document.getElementById('health-status').textContent = 'Error';
+                document.getElementById('health-status').parentElement.querySelector('.status-indicator').className = 'status-indicator status-error';
+                addResult(`Health Check: Error - ${error.message}`, 'error');
+            }
+
+            // Test holographic API
+            try {
+                const holoResponse = await fetch('/api/v1/holographic/devices');
+                const holoData = await holoResponse.json();
+                document.getElementById('holo-api-status').textContent = holoData.success ? 'Working' : 'Error';
+                document.getElementById('holo-api-status').parentElement.querySelector('.status-indicator').className = 
+                    'status-indicator ' + (holoData.success ? 'status-success' : 'status-error');
+                addResult(`Holographic API: ${holoData.success ? 'Working' : 'Error'} - ${holoData.message}`, holoData.success ? 'success' : 'error');
+            } catch (error) {
+                document.getElementById('holo-api-status').textContent = 'Error';
+                document.getElementById('holo-api-status').parentElement.querySelector('.status-indicator').className = 'status-indicator status-error';
+                addResult(`Holographic API: Error - ${error.message}`, 'error');
+            }
+
+            // Test 3D files API
+            try {
+                const filesResponse = await fetch('/api/v1/3d-files/models');
+                const filesData = await filesResponse.json();
+                document.getElementById('3d-api-status').textContent = 'Working';
+                document.getElementById('3d-api-status').parentElement.querySelector('.status-indicator').className = 'status-indicator status-success';
+                addResult(`3D Files API: Working - Found ${filesData.total_count || 0} models`, 'success');
+            } catch (error) {
+                document.getElementById('3d-api-status').textContent = 'Error';
+                document.getElementById('3d-api-status').parentElement.querySelector('.status-indicator').className = 'status-indicator status-error';
+                addResult(`3D Files API: Error - ${error.message}`, 'error');
+            }
+
+            addResult('API integration tests completed!', 'info');
+        }
+
+        function test3DVisualization() {
+            addResult('Testing 3D Visualization initialization...', 'info');
+            
+            try {
+                if (window.SEEKER3DVisualization) {
+                    const visualization = new SEEKER3DVisualization('3d-test-container');
+                    addResult('3D Visualization: Successfully initialized', 'success');
+                    
+                    // Test holographic integration
+                    if (visualization.holographicProjection) {
+                        addResult('3D-Holographic Integration: Connected successfully', 'success');
+                    } else {
+                        addResult('3D-Holographic Integration: Not connected', 'warning');
+                    }
+                } else {
+                    addResult('3D Visualization: Module not available', 'error');
+                }
+            } catch (error) {
+                addResult(`3D Visualization: Error - ${error.message}`, 'error');
+            }
+        }
+
+        async function testHolographicProjection() {
+            addResult('Testing Holographic Projection...', 'info');
+            
+            try {
+                if (window.SEEKERHolographicProjection) {
+                    const holographic = new SEEKERHolographicProjection();
+                    addResult('Holographic Projection: Successfully initialized', 'success');
+                    
+                    // Test device loading
+                    await holographic.loadDevices();
+                    if (holographic.devices.length > 0) {
+                        addResult(`Holographic Devices: Found ${holographic.devices.length} devices`, 'success');
+                    } else {
+                        addResult('Holographic Devices: No devices found', 'warning');
+                    }
+                } else {
+                    addResult('Holographic Projection: Module not available', 'error');
+                }
+            } catch (error) {
+                addResult(`Holographic Projection: Error - ${error.message}`, 'error');
+            }
+        }
+
+        function addResult(message, type) {
+            testResults.push({ message, type, timestamp: new Date() });
+            updateResultsDisplay();
+        }
+
+        function updateResultsDisplay() {
+            const container = document.getElementById('test-results');
+            container.innerHTML = testResults.map(result => {
+                const icon = {
+                    'success': 'fas fa-check-circle text-success',
+                    'error': 'fas fa-times-circle text-danger',
+                    'warning': 'fas fa-exclamation-triangle text-warning',
+                    'info': 'fas fa-info-circle text-info'
+                }[result.type];
+                
+                return `
+                    <div class="mb-2">
+                        <i class="${icon} me-2"></i>
+                        <span>${result.message}</span>
+                        <small class="text-muted ms-2">${result.timestamp.toLocaleTimeString()}</small>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(testAPIs, 1000);
+        });
+    </script>
+</body>
+</html> 
